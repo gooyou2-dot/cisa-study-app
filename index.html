@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI-Powered CISA Learning Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Orbitron:wght@600;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        h1, h2, h3 {
+            font-family: 'Orbitron', sans-serif;
+        }
+        .card {
+            background-color: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            padding: 1.5rem;
+            transition: all 0.3s ease-in-out;
+        }
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .btn-primary {
+            background-color: #4f46e5;
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: #4338ca;
+        }
+        .btn-secondary {
+            background-color: #64748b;
+            color: white;
+        }
+        .btn-secondary:hover {
+            background-color: #475569;
+        }
+        .answer-btn {
+            width: 100%;
+            text-align: left;
+            padding: 1rem;
+            margin-top: 0.5rem;
+            border: 1px solid #e5e7eb;
+            background-color: #f9fafb;
+        }
+        .answer-btn:hover {
+            border-color: #4f46e5;
+            background-color: #eef2ff;
+        }
+        .answer-btn.correct {
+            border-color: #16a34a;
+            background-color: #dcfce7;
+        }
+        .answer-btn.incorrect {
+            border-color: #dc2626;
+            background-color: #fee2e2;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+    <div class="container mx-auto p-4 sm:p-6 lg:p-8 max-w-4xl">
+        <header class="text-center mb-8">
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-900">CISA Learning Platform</h1>
+            <p class="text-gray-600 mt-2">Your AI-powered path to CISA certification.</p>
+        </header>
+
+        <!-- Main Menu -->
+        <main id="mainMenu" class="card">
+            <h2 class="text-2xl font-semibold mb-4 text-center">Mission Parameters</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label for="quizType" class="block text-sm font-medium text-gray-700">Select Quiz Type:</label>
+                    <select id="quizType" class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                        <option value="mixed-10">Standard Protocol (10 Mixed)</option>
+                        <option value="domain1">Domain 1: Auditing Process (5)</option>
+                        <option value="domain2">Domain 2: Governance & IT Mgmt (5)</option>
+                        <option value="domain3">Domain 3: IS Acquisition & Dev (5)</option>
+                        <option value="domain4">Domain 4: IS Ops & Resilience (5)</option>
+                        <option value="domain5">Domain 5: Info Asset Protection (5)</option>
+                        <option value="weak-areas">Target Weak Areas (5)</option>
+                    </select>
+                </div>
+                <div class="flex items-end">
+                    <button id="startQuizBtn" class="btn btn-primary w-full">Initialize Mission</button>
+                </div>
+            </div>
+             <div class="mt-4 text-center">
+                <button id="resetStatsBtn" class="text-sm text-red-600 hover:underline">Reset All Stats</button>
+            </div>
+        </main>
+
+        <!-- Quiz Panel -->
+        <section id="quizPanel" class="card hidden">
+            <div id="loader" class="text-center p-8 hidden">
+                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto"></div>
+                <p class="mt-4 text-gray-600">AI is generating your questions...</p>
+            </div>
+            <div id="quizContent">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-2xl font-semibold">Active Mission</h2>
+                    <button id="exitQuizBtn" class="btn btn-secondary">Exit</button>
+                </div>
+                <div class="mb-4">
+                    <div class="flex justify-between mb-1">
+                        <span id="progressText" class="text-sm font-medium text-gray-700">Question 1 of 10</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2.5">
+                        <div id="progressBar" class="bg-indigo-600 h-2.5 rounded-full" style="width: 10%"></div>
+                    </div>
+                </div>
+                <div id="questionArea">
+                    <h3 id="questionText" class="text-xl font-medium mb-4"></h3>
+                    <div id="answers" class="space-y-2"></div>
+                </div>
+                <div id="explanationArea" class="mt-6 p-4 bg-gray-100 rounded-lg hidden">
+                    <h4 class="font-bold text-lg mb-2">Explanation</h4>
+                    <p id="explanationText"></p>
+                </div>
+                 <div class="mt-6 text-right">
+                    <button id="nextBtn" class="btn btn-primary hidden">Next Question</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Results Panel -->
+        <section id="resultsPanel" class="card hidden">
+            <h2 class="text-2xl font-semibold text-center mb-4">Mission Debrief</h2>
+            <div id="finalScore" class="text-center text-3xl font-bold mb-6"></div>
+            <div class="mb-6">
+                <h3 class="text-lg font-semibold mb-2">Performance by Domain:</h3>
+                <div id="domainPerformance" class="space-y-2"></div>
+            </div>
+            <div class="text-center">
+                <button id="restartBtn" class="btn btn-primary">New Mission</button>
+            </div>
+        </section>
+
+    </div>
+
+    <script>
+        // --- CONFIGURATION ---
+        // IMPORTANT: PASTE YOUR GOOGLE API KEY HERE
+        const API_KEY = "AIzaSyB6a-6ZKdZUKsonQWcxuXhIOC7C2pMiBPk"; // If you want to use models other than gemini-2.5-flash-preview-05-20, provide an API key here. Otherwise, leave this as-is.
+        const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${API_KEY}`;
+
+        // --- STATE MANAGEMENT ---
+        let state = {
+            currentView: 'mainMenu',
+            currentQuiz: [],
+            currentIndex: 0,
+            userResponses: [],
+            stats: {
+                totalQuestions: 0,
+                correctAnswers: 0,
+                performance: {
+                    domain1: { correct: 0, total: 0 },
+                    domain2: { correct: 0, total: 0 },
+                    domain3: { correct: 0, total: 0 },
+                    domain4: { correct: 0, total: 0 },
+                    domain5: { correct: 0, total: 0 },
+                }
+            }
+        };
+
+        const CISA_DOMAINS = {
+            domain1: { name: "The Process of Auditing Information Systems", weight: 0.21 },
+            domain2: { name: "Governance and Management of IT", weight: 0.17 },
+            domain3: { name: "Information Systems Acquisition, Development, and Implementation", weight: 0.12 },
+            domain4: { name: "Information Systems Operations and Business Resilience", weight: 0.23 },
+            domain5: { name: "Protection of Information Assets", weight: 0.27 }
+        };
+
+        // --- DOM ELEMENTS ---
+        const mainMenu = document.getElementById('mainMenu');
+        const quizPanel = document.getElementById('quizPanel');
+        const resultsPanel = document.getElementById('resultsPanel');
+        const loader = document.getElementById('loader');
+        const quizContent = document.getElementById('quizContent');
+        const startQuizBtn = document.getElementById('startQuizBtn');
+        const exitQuizBtn = document.getElementById('exitQuizBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const restartBtn = document.getElementById('restartBtn');
+        const resetStatsBtn = document.getElementById('resetStatsBtn');
+
+        // --- UI RENDERING ---
+        function renderView() {
+            mainMenu.classList.add('hidden');
+            quizPanel.classList.add('hidden');
+            resultsPanel.classList.add('hidden');
+            document.getElementById(state.currentView).classList.remove('hidden');
+        }
+
+        function showLoader(show) {
+            loader.classList.toggle('hidden', !show);
+            quizContent.classList.toggle('hidden', show);
+        }
+        
+        // --- API INTERACTION ---
+        async function generateQuestions(prompt) {
+            if (!API_KEY) {
+               console.warn("API Key is missing. Falling back to mock data.");
+               return generateMockQuestions();
+            }
+
+            const payload = {
+                contents: [{ parts: [{ text: prompt }] }],
+                generationConfig: {
+                    responseMimeType: "application/json",
+                    responseSchema: {
+                        type: "OBJECT",
+                        properties: {
+                            "questions": {
+                                type: "ARRAY",
+                                items: {
+                                    type: "OBJECT",
+                                    properties: {
+                                        "question": { type: "STRING" },
+                                        "options": { type: "ARRAY", items: { type: "STRING" } },
+                                        "answer": { type: "NUMBER" },
+                                        "explanation": { type: "STRING" },
+                                        "domain": { type: "STRING" }
+                                    },
+                                    required: ["question", "options", "answer", "explanation", "domain"]
+                                }
+                            }
+                        },
+                        required: ["questions"]
+                    }
+                }
+            };
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`API request failed with status ${response.status}`);
+                }
+
+                const result = await response.json();
+                const jsonText = result.candidates[0].content.parts[0].text;
+                const parsedJson = JSON.parse(jsonText);
+                return parsedJson.questions;
+
+            } catch (error) {
+                console.error("Error calling Gemini API:", error);
+                alert("There was an error generating questions from the AI. Please check your API key and network connection. Using fallback questions for now.");
+                return generateMockQuestions();
+            }
+        }
+        
+        function generateMockQuestions() {
+             const mockResponses = {
+                "mixed-10": [
+                    { "question": "What is the primary purpose of an IS audit charter?", "options": ["Document procedures for an engagement.", "Outline audit cost and timeline.", "Grant authority, scope, and responsibilities.", "List report distribution stakeholders."], "answer": 2, "explanation": "The charter formally establishes mandate, authority, independence, and scope for the audit function.", "domain": "domain1" },
+                    { "question": "A primary goal of IT governance is to:", "options": ["Have the latest technology.", "Align IT with business strategy.", "Minimize all IT spend.", "Run the help desk."], "answer": 1, "explanation": "IT governance ensures IT enables and supports business objectives.", "domain": "domain2" },
+                    { "question": "During which SDLC phase are user requirements formally defined?", "options": ["Design", "Development", "Testing", "Requirements Gathering"], "answer": 3, "explanation": "Analysis/requirements phase captures, validates, and documents stakeholder needs.", "domain": "domain3" },
+                    { "question": "A business impact analysis (BIA) is performed to:", "options": ["Calculate disaster costs", "Identify critical processes & RTOs", "Pick an alternate site vendor", "Test the DRP"], "answer": 1, "explanation": "BIA identifies critical processes, dependencies, and recovery objectives.", "domain": "domain4" },
+                    { "question": "Which provides the STRONGEST authentication?", "options": ["Complex password", "Biometric scan", "Password + OTP", "Security question"], "answer": 2, "explanation": "Combining different factors (knowledge + possession) is MFA and is strongest.", "domain": "domain5" },
+                 ],
+                "domain1": [
+                    { "question": "The PRIMARY purpose of an IS audit is to:", "options": ["Find fraudulent activities.", "Provide an opinion on the adequacy of controls.", "Recommend specific vendor products.", "Discipline employees for policy violations."], "answer": 1, "explanation": "The primary role of an IS audit is to independently evaluate and provide an opinion on the effectiveness and adequacy of the organization's internal controls.", "domain": "domain1" },
+                    { "question": "When planning an audit, an IS auditor should FIRST:", "options": ["Develop the audit report.", "Select the audit team members.", "Understand the business processes and environment.", "Perform substantive testing."], "answer": 2, "explanation": "A thorough understanding of the business context, processes, and environment is the foundational first step in audit planning, as it allows the auditor to identify key risks and scope the audit appropriately.", "domain": "domain1" },
+                ]
+            };
+            const quizType = document.getElementById('quizType').value;
+            return mockResponses[quizType] || mockResponses['mixed-10'];
+        }
+
+        // --- QUIZ LOGIC ---
+        async function startQuiz() {
+            state.currentView = 'quizPanel';
+            renderView();
+            showLoader(true);
+
+            const quizType = document.getElementById('quizType').value;
+            const prompt = buildPromptForQuizType(quizType);
+            
+            try {
+                const questions = await generateQuestions(prompt);
+                if (!questions || questions.length === 0) {
+                    throw new Error("AI returned no questions.");
+                }
+                state.currentQuiz = questions;
+                state.currentIndex = 0;
+                state.userResponses = [];
+                showLoader(false);
+                renderQuestion();
+            } catch (error) {
+                console.error("Failed to start quiz:", error);
+                showLoader(false);
+                // The error is already alerted in generateQuestions, so we just go back to the menu.
+                state.currentView = 'mainMenu';
+                renderView();
+            }
+        }
+
+        function buildPromptForQuizType(quizType) {
+            const basePrompt = `You are an expert CISA exam content creator. Generate a set of high-quality, scenario-based multiple-choice questions. Each question must have four options, a single correct answer index (0-3), a detailed explanation, and the relevant CISA domain key (e.g., 'domain1'). The distractors should be plausible but incorrect.`;
+
+            if (quizType.startsWith('domain')) {
+                const domainKey = quizType;
+                const domainName = CISA_DOMAINS[domainKey].name;
+                return `${basePrompt} Generate 5 questions exclusively for CISA ${domainKey}: ${domainName}.`;
+            } else if (quizType === 'weak-areas') {
+                const weakAreas = getWeakAreas();
+                if (weakAreas.length === 0) {
+                    alert("No weak areas identified yet. Starting a standard mixed quiz instead.");
+                    return `${basePrompt} Generate 5 questions from a mix of all five CISA domains.`;
+                }
+                const weakDomainNames = weakAreas.map(d => CISA_DOMAINS[d].name).join(', ');
+                return `${basePrompt} Generate 5 questions targeting the user's identified weak areas: ${weakDomainNames}. Focus on fundamental concepts within these domains.`;
+            } else { // mixed-10
+                return `${basePrompt} Generate 10 questions from a mix of all five CISA domains, weighted according to the official exam percentages.`;
+            }
+        }
+
+        function getWeakAreas() {
+            const weak = [];
+            for (const domainKey in state.stats.performance) {
+                const perf = state.stats.performance[domainKey];
+                if (perf.total >= 3) { // Only consider a domain if at least 3 questions have been answered
+                    const accuracy = perf.correct / perf.total;
+                    if (accuracy < 0.6) { // Threshold for weakness is < 60%
+                        weak.push(domainKey);
+                    }
+                }
+            }
+            return weak;
+        }
+
+        function renderQuestion() {
+            if (state.currentIndex >= state.currentQuiz.length) {
+                finishQuiz();
+                return;
+            }
+
+            const question = state.currentQuiz[state.currentIndex];
+            document.getElementById('questionText').textContent = question.question;
+            
+            const answersContainer = document.getElementById('answers');
+            answersContainer.innerHTML = '';
+            question.options.forEach((option, index) => {
+                const button = document.createElement('button');
+                button.textContent = `${String.fromCharCode(65 + index)}. ${option}`;
+                button.className = 'btn answer-btn';
+                button.dataset.index = index;
+                button.onclick = () => selectAnswer(index);
+                answersContainer.appendChild(button);
+            });
+
+            document.getElementById('explanationArea').classList.add('hidden');
+            document.getElementById('nextBtn').classList.add('hidden');
+            updateProgress();
+        }
+
+        function selectAnswer(selectedIndex) {
+            const question = state.currentQuiz[state.currentIndex];
+            const isCorrect = selectedIndex === question.answer;
+
+            state.stats.totalQuestions++;
+            const domainStats = state.stats.performance[question.domain];
+            if(domainStats){
+                domainStats.total++;
+                if (isCorrect) {
+                    state.stats.correctAnswers++;
+                    domainStats.correct++;
+                }
+            }
+            saveStats();
+
+            state.userResponses.push({ question, selectedIndex, isCorrect });
+
+            const answerButtons = document.querySelectorAll('.answer-btn');
+            answerButtons.forEach(btn => {
+                btn.disabled = true;
+                const btnIndex = parseInt(btn.dataset.index);
+                if (btnIndex === question.answer) {
+                    btn.classList.add('correct');
+                } else if (btnIndex === selectedIndex) {
+                    btn.classList.add('incorrect');
+                }
+            });
+
+            document.getElementById('explanationText').textContent = question.explanation;
+            document.getElementById('explanationArea').classList.remove('hidden');
+            document.getElementById('nextBtn').classList.remove('hidden');
+        }
+
+        function nextQuestion() {
+            state.currentIndex++;
+            renderQuestion();
+        }
+
+        function updateProgress() {
+            const progress = ((state.currentIndex + 1) / state.currentQuiz.length) * 100;
+            document.getElementById('progressBar').style.width = `${progress}%`;
+            document.getElementById('progressText').textContent = `Question ${state.currentIndex + 1} of ${state.currentQuiz.length}`;
+        }
+
+        function finishQuiz() {
+            state.currentView = 'resultsPanel';
+            renderView();
+            renderResults();
+        }
+        
+        function exitQuiz() {
+            if (confirm("Are you sure you want to exit? Your progress in this quiz will be lost.")) {
+                state.currentView = 'mainMenu';
+                renderView();
+            }
+        }
+
+        // --- RESULTS LOGIC ---
+        function renderResults() {
+            const correctCount = state.userResponses.filter(r => r.isCorrect).length;
+            const totalCount = state.currentQuiz.length;
+            const score = totalCount > 0 ? Math.round((correctCount / totalCount) * 100) : 0;
+
+            document.getElementById('finalScore').textContent = `You scored ${correctCount} out of ${totalCount} (${score}%)`;
+
+            const performanceContainer = document.getElementById('domainPerformance');
+            performanceContainer.innerHTML = '';
+            for (const domainKey in CISA_DOMAINS) {
+                const perf = state.stats.performance[domainKey];
+                if (perf.total > 0) {
+                    const accuracy = Math.round((perf.correct / perf.total) * 100);
+                    const div = document.createElement('div');
+                    div.innerHTML = `
+                        <p class="font-medium">${CISA_DOMAINS[domainKey].name}</p>
+                        <div class="flex items-center">
+                            <div class="w-full bg-gray-200 rounded-full h-2.5 mr-4">
+                                <div class="bg-blue-600 h-2.5 rounded-full" style="width: ${accuracy}%"></div>
+                            </div>
+                            <span class="text-sm font-medium">${accuracy}%</span>
+                        </div>
+                    `;
+                    performanceContainer.appendChild(div);
+                }
+            }
+        }
+
+        // --- LOCAL STORAGE & STATS ---
+        function saveStats() {
+            localStorage.setItem('cisaAppStatsV2', JSON.stringify(state.stats));
+        }
+
+        function loadStats() {
+            const savedStats = localStorage.getItem('cisaAppStatsV2');
+            if (savedStats) {
+                state.stats = JSON.parse(savedStats);
+            }
+        }
+
+        function resetStats() {
+            if (confirm("Are you sure you want to reset all your statistics? This action cannot be undone.")) {
+                state.stats = {
+                    totalQuestions: 0,
+                    correctAnswers: 0,
+                    performance: {
+                        domain1: { correct: 0, total: 0 },
+                        domain2: { correct: 0, total: 0 },
+                        domain3: { correct: 0, total: 0 },
+                        domain4: { correct: 0, total: 0 },
+                        domain5: { correct: 0, total: 0 },
+                    }
+                };
+                saveStats();
+                alert("Your statistics have been reset.");
+            }
+        }
+
+        // --- INITIALIZATION ---
+        document.addEventListener('DOMContentLoaded', () => {
+            loadStats();
+            renderView();
+
+            startQuizBtn.addEventListener('click', startQuiz);
+            exitQuizBtn.addEventListener('click', exitQuiz);
+            nextBtn.addEventListener('click', nextQuestion);
+            restartBtn.addEventListener('click', () => {
+                state.currentView = 'mainMenu';
+                renderView();
+            });
+            resetStatsBtn.addEventListener('click', resetStats);
+        });
+    </script>
+
+</body>
+</html>
