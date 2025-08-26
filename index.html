@@ -3,504 +3,280 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI-Powered CISA Learning Platform</title>
+    <title>CISA Command Center v5</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Orbitron:wght@600;800&display=swap" rel="stylesheet">
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-        h1, h2, h3 {
-            font-family: 'Orbitron', sans-serif;
-        }
-        .card {
-            background-color: white;
-            border-radius: 0.75rem;
-            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-            padding: 1.5rem;
-            transition: all 0.3s ease-in-out;
-        }
-        .btn {
-            padding: 0.75rem 1.5rem;
-            border-radius: 0.5rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease-in-out;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .btn-primary {
-            background-color: #4f46e5;
-            color: white;
-        }
-        .btn-primary:hover {
-            background-color: #4338ca;
-        }
-        .btn-secondary {
-            background-color: #64748b;
-            color: white;
-        }
-        .btn-secondary:hover {
-            background-color: #475569;
-        }
-        .answer-btn {
-            width: 100%;
-            text-align: left;
-            padding: 1rem;
-            margin-top: 0.5rem;
-            border: 1px solid #e5e7eb;
-            background-color: #f9fafb;
-        }
-        .answer-btn:hover {
-            border-color: #4f46e5;
-            background-color: #eef2ff;
-        }
-        .answer-btn.correct {
-            border-color: #16a34a;
-            background-color: #dcfce7;
-        }
-        .answer-btn.incorrect {
-            border-color: #dc2626;
-            background-color: #fee2e2;
-        }
-        .hidden {
-            display: none;
-        }
+        :root { --background: #f8f9fa; --text-primary: #1f2937; --text-secondary: #4b5563; --card-bg: #ffffff; --primary: #4f46e5; --primary-hover: #4338ca; --secondary: #64748b; --secondary-hover: #475569; --border: #e5e7eb; }
+        html.dark { --background: #111827; --text-primary: #f9fafb; --text-secondary: #9ca3af; --card-bg: #1f2937; --primary: #6366f1; --primary-hover: #4f46e5; --border: #374151; }
+        body { font-family: 'Inter', sans-serif; background-color: var(--background); color: var(--text-primary); transition: background-color 0.3s, color 0.3s; }
+        h1, h2, h3 { font-family: 'Orbitron', sans-serif; }
+        .card { background-color: var(--card-bg); border-radius: 0.75rem; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); padding: 1.5rem; transition: background-color 0.3s; border: 1px solid var(--border); }
+        .btn { padding: 0.75rem 1.5rem; border-radius: 0.5rem; font-weight: 600; cursor: pointer; transition: all 0.2s ease-in-out; display: inline-flex; align-items: center; justify-content: center; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-primary { background-color: var(--primary); color: white; }
+        .btn-primary:hover:not(:disabled) { background-color: var(--primary-hover); }
+        .btn-secondary { background-color: var(--secondary); color: white; }
+        .btn-secondary:hover:not(:disabled) { background-color: var(--secondary-hover); }
+        .answer-btn { width: 100%; text-align: left; padding: 1rem; margin-top: 0.5rem; border: 1px solid var(--border); background-color: var(--card-bg); }
+        .answer-btn:hover:not(:disabled) { border-color: var(--primary); background-color: rgba(79, 70, 229, 0.1); }
+        .answer-btn.correct { border-color: #16a34a; background-color: rgba(22, 163, 74, 0.1); }
+        .answer-btn.incorrect { border-color: #dc2626; background-color: rgba(220, 38, 38, 0.1); }
+        .hidden { display: none; }
+        .modal-backdrop { position: fixed; inset: 0; background-color: rgba(0, 0, 0, 0.7); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+        .modal-content { min-width: 320px; max-width: 600px; }
+        .ach.unlocked { opacity: 1; border-style: solid; }
+        .ach { opacity: 0.4; border-style: dashed; }
     </style>
 </head>
-<body class="bg-gray-50 text-gray-800">
+<body>
 
     <div class="container mx-auto p-4 sm:p-6 lg:p-8 max-w-4xl">
         <header class="text-center mb-8">
-            <h1 class="text-3xl md:text-4xl font-bold text-gray-900">CISA Learning Platform</h1>
-            <p class="text-gray-600 mt-2">Your AI-powered path to CISA certification.</p>
+            <h1 class="text-3xl md:text-4xl font-bold">CISA Command Center</h1>
+            <p class="text-secondary mt-2">Your AI-powered path to CISA certification.</p>
         </header>
 
         <!-- Main Menu -->
         <main id="mainMenu" class="card">
-            <h2 class="text-2xl font-semibold mb-4 text-center">Mission Parameters</h2>
+            <div class="flex justify-between items-center mb-6"><h2 class="text-2xl font-semibold">// Mission Parameters</h2><button id="themeToggle" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700"><svg id="theme-icon-light" class="h-6 w-6 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg><svg id="theme-icon-dark" class="h-6 w-6 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg></button></div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    <label for="quizType" class="block text-sm font-medium text-gray-700">Select Quiz Type:</label>
-                    <select id="quizType" class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
-                        <option value="mixed-10">Standard Protocol (10 Mixed)</option>
-                        <option value="domain1">Domain 1: Auditing Process (5)</option>
-                        <option value="domain2">Domain 2: Governance & IT Mgmt (5)</option>
-                        <option value="domain3">Domain 3: IS Acquisition & Dev (5)</option>
-                        <option value="domain4">Domain 4: IS Ops & Resilience (5)</option>
-                        <option value="domain5">Domain 5: Info Asset Protection (5)</option>
-                        <option value="weak-areas">Target Weak Areas (5)</option>
-                    </select>
-                </div>
-                <div class="flex items-end">
-                    <button id="startQuizBtn" class="btn btn-primary w-full">Initialize Mission</button>
-                </div>
+                <div><label for="quizType" class="block text-sm font-medium text-secondary">Select Quiz Type:</label><select id="quizType" class="mt-1 block w-full p-2 border rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 bg-transparent border-gray-300 dark:border-gray-600"><option value="mixed-10">Standard Protocol (10 Mixed)</option><option value="domain1">Domain 1: Auditing Process (5)</option><option value="domain2">Domain 2: Governance & IT Mgmt (5)</option><option value="domain3">Domain 3: IS Acquisition & Dev (5)</option><option value="domain4">Domain 4: IS Ops & Resilience (5)</option><option value="domain5">Domain 5: Info Asset Protection (5)</option><option value="weak-areas">Target Weak Areas (10)</option><option value="complex-scenario">Complex Scenario (5 Multi-Domain)</option></select></div>
+                <div class="flex items-end"><button id="startQuizBtn" class="btn btn-primary w-full">Initialize Mission</button></div>
             </div>
-             <div class="mt-4 text-center">
-                <button id="resetStatsBtn" class="text-sm text-red-600 hover:underline">Reset All Stats</button>
-            </div>
+            <div class="mt-4"><button id="dailyChallengeBtn" class="btn btn-primary w-full bg-green-600 hover:bg-green-700">🔥 Daily Challenge</button></div>
+            <div class="mt-6 flex justify-center items-center space-x-4"><button id="serviceRecordBtn" class="btn btn-secondary">// Service Record</button><button id="systemBtn" class="btn btn-secondary">// System</button></div>
         </main>
 
         <!-- Quiz Panel -->
         <section id="quizPanel" class="card hidden">
-            <div id="loader" class="text-center p-8 hidden">
-                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto"></div>
-                <p class="mt-4 text-gray-600">AI is generating your questions...</p>
-            </div>
-            <div id="quizContent">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-2xl font-semibold">Active Mission</h2>
-                    <button id="exitQuizBtn" class="btn btn-secondary">Exit</button>
-                </div>
-                <div class="mb-4">
-                    <div class="flex justify-between mb-1">
-                        <span id="progressText" class="text-sm font-medium text-gray-700">Question 1 of 10</span>
-                    </div>
-                    <div class="w-full bg-gray-200 rounded-full h-2.5">
-                        <div id="progressBar" class="bg-indigo-600 h-2.5 rounded-full" style="width: 10%"></div>
-                    </div>
-                </div>
-                <div id="questionArea">
-                    <h3 id="questionText" class="text-xl font-medium mb-4"></h3>
-                    <div id="answers" class="space-y-2"></div>
-                </div>
-                <div id="explanationArea" class="mt-6 p-4 bg-gray-100 rounded-lg hidden">
-                    <h4 class="font-bold text-lg mb-2">Explanation</h4>
-                    <p id="explanationText"></p>
-                </div>
-                 <div class="mt-6 text-right">
-                    <button id="nextBtn" class="btn btn-primary hidden">Next Question</button>
+            <div id="loader" class="text-center p-8"><div class="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 dark:border-gray-100 mx-auto"></div><p class="mt-4 text-secondary">AI is generating your questions...</p></div>
+            <div id="quizContent" class="hidden">
+                <div class="flex justify-between items-center mb-4"><h2 class="text-2xl font-semibold">Active Mission</h2><div class="flex items-center space-x-4"><span id="streakCounter" class="font-mono text-lg hidden">🔥 0</span><button id="exitQuizBtn" class="btn btn-secondary">Exit</button></div></div>
+                <div class="mb-4"><div class="flex justify-between mb-1"><span id="progressText" class="text-sm font-medium text-secondary">Question 1 of 10</span></div><div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5"><div id="progressBar" class="bg-indigo-600 h-2.5 rounded-full" style="width: 10%"></div></div></div>
+                <div id="questionArea"><h3 id="questionText" class="text-xl font-medium mb-4"></h3><div id="answers" class="space-y-2"></div></div>
+                <div id="explanationArea" class="mt-6 p-4 bg-gray-100 dark:bg-gray-800 rounded-lg hidden"><h4 class="font-bold text-lg">Explanation</h4><p id="explanationText" class="mt-2 text-secondary"></p></div>
+                <div class="mt-6 flex justify-between items-center">
+                    <button id="prevBtn" class="btn btn-secondary">⏪ Previous</button>
+                    <button id="aiAssistBtn" class="btn btn-primary text-sm py-2 px-3" disabled title="Answer the question to enable AI Assist">🤖 AI Assist</button>
+                    <button id="nextBtn" class="btn btn-primary">Next ⏩</button>
                 </div>
             </div>
         </section>
 
-        <!-- Results Panel -->
-        <section id="resultsPanel" class="card hidden">
-            <h2 class="text-2xl font-semibold text-center mb-4">Mission Debrief</h2>
-            <div id="finalScore" class="text-center text-3xl font-bold mb-6"></div>
-            <div class="mb-6">
-                <h3 class="text-lg font-semibold mb-2">Performance by Domain:</h3>
-                <div id="domainPerformance" class="space-y-2"></div>
-            </div>
-            <div class="text-center">
-                <button id="restartBtn" class="btn btn-primary">New Mission</button>
-            </div>
-        </section>
+        <!-- Results/Review Panels -->
+        <section id="resultsPanel" class="card hidden"><h2 class="text-2xl font-semibold text-center mb-4">Mission Debrief</h2><div id="finalScore" class="text-center text-3xl font-bold mb-2"></div><div id="xpGained" class="text-center text-lg text-green-600 font-semibold mb-6"></div><div class="mb-6"><h3 class="text-lg font-semibold mb-2">Performance by Domain:</h3><div id="domainPerformance" class="space-y-2"></div></div><div class="text-center space-x-4"><button id="reviewMissionBtn" class="btn btn-secondary">Review Mission</button><button id="restartBtn" class="btn btn-primary">New Mission</button></div></section>
+        <section id="reviewPanel" class="card hidden"><h2 class="text-2xl font-semibold text-center mb-6">Mission Review</h2><div id="reviewQuestionsContainer" class="space-y-6"></div><div class="mt-6 text-center"><button id="backToResultsBtn" class="btn btn-primary">Back to Debrief</button></div></section>
 
+        <!-- Service Record & System Panels -->
+        <section id="serviceRecordPanel" class="card hidden">
+            <h2 class="text-2xl font-semibold text-center mb-6">// Service Record</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-center"><div class="card bg-gray-100 dark:bg-gray-800"><h3 class="font-semibold text-lg mb-2">Rank</h3><div id="rankBadge" class="text-5xl">🎖️</div><div id="rankName" class="text-2xl font-bold mt-2">Cadet</div></div><div class="card bg-gray-100 dark:bg-gray-800"><h3 class="font-semibold text-lg mb-2">Experience Points</h3><div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-4 mt-4"><div id="xpBar" class="bg-green-500 h-4 rounded-full text-xs text-white flex items-center justify-center" style="width: 10%"></div></div><div id="xpText" class="text-sm mt-2 text-secondary">10 / 100 XP</div></div></div>
+            <div class="mt-6 card bg-gray-100 dark:bg-gray-800"><h3 class="text-xl font-semibold text-center mb-4">// Commendations</h3><div id="achGrid" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div></div>
+            <div class="mt-6 text-center"><button class="backToMenuBtn btn btn-secondary">Return to Menu</button></div>
+        </section>
+        <section id="systemPanel" class="card hidden"><h2 class="text-2xl font-semibold text-center mb-6">// System & Data</h2><div class="space-y-4"><div><h3 class="font-semibold">API Key Status</h3><div class="flex items-center space-x-2 mt-2"><button id="checkApiKeyBtn" class="btn btn-primary text-sm py-2 px-3">Check Connection</button><span id="apiKeyStatus" class="text-sm font-mono">Status: UNCHECKED</span></div></div><div><h3 class="font-semibold">Local Data</h3><p class="text-sm text-secondary">Your progress is saved in this browser. Resetting will clear all stats, rank, and XP.</p><button id="resetStatsBtn" class="btn btn-secondary mt-2 text-sm py-2 px-3 bg-red-600 hover:bg-red-700">Reset All Stats</button></div></div><div class="mt-6 text-center"><button class="backToMenuBtn btn btn-secondary">Return to Menu</button></div></section>
     </div>
+    
+    <!-- Modals -->
+    <div id="aiAssistModal" class="modal-backdrop hidden"><div class="modal-content card"><h3 class="text-xl font-semibold mb-4">AI Assistant</h3><div id="aiAssistLoader" class="text-center p-4"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 dark:border-gray-100 mx-auto"></div><p class="mt-2 text-sm text-secondary">Thinking...</p></div><div id="aiAssistResponse" class="prose max-w-none hidden text-secondary"></div><div class="text-right mt-4"><button id="closeAiAssistModal" class="btn btn-secondary">Close</button></div></div></div>
+    <div id="exitModal" class="modal-backdrop hidden"><div class="modal-content card text-center"><h3 class="text-xl font-semibold mb-4">Exit Mission?</h3><p class="text-secondary mb-6">Your progress in this mission will be lost. Lifetime stats will be saved.</p><div class="flex justify-center space-x-4"><button id="cancelExitBtn" class="btn btn-secondary">Cancel</button><button id="confirmExitBtn" class="btn btn-primary bg-red-600 hover:bg-red-700">Confirm Exit</button></div></div></div>
 
     <script>
         // --- CONFIGURATION ---
-        // IMPORTANT: PASTE YOUR GOOGLE API KEY HERE
-        const API_KEY = "AIzaSyB6a-6ZKdZUKsonQWcxuXhIOC7C2pMiBPk"; // If you want to use models other than gemini-2.5-flash-preview-05-20, provide an API key here. Otherwise, leave this as-is.
+        const API_KEY = "AIzaSyBd6Jcrmk92z6of7Zj1y65Ozn1lnIgv65Q"; // PASTE YOUR GOOGLE API KEY HERE
         const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${API_KEY}`;
+        const RANKS = [{name:'Cadet',xp:0,badge:'🎖️'},{name:'Ensign',xp:100,badge:'⭐'},{name:'Lieutenant',xp:300,badge:'⭐⭐'},{name:'Commander',xp:700,badge:'🚀'},{name:'Captain',xp:1500,badge:'🌟'},{name:'Admiral',xp:3000,badge:'🏆'}];
+        const ACHIEVEMENTS = { first_mission:{name:'First Mission',desc:'Complete a quiz.'}, quick_learner:{name:'Quick Learner',desc:'Get 10 correct answers.'}, persistent_analyst:{name:'Persistent Analyst',desc:'Answer 100 total questions.'}, perfectionist:{name:'Perfectionist',desc:'Score 100% on a quiz of 10+ Qs.'} };
 
         // --- STATE MANAGEMENT ---
-        let state = {
-            currentView: 'mainMenu',
-            currentQuiz: [],
-            currentIndex: 0,
-            userResponses: [],
-            stats: {
-                totalQuestions: 0,
-                correctAnswers: 0,
-                performance: {
-                    domain1: { correct: 0, total: 0 },
-                    domain2: { correct: 0, total: 0 },
-                    domain3: { correct: 0, total: 0 },
-                    domain4: { correct: 0, total: 0 },
-                    domain5: { correct: 0, total: 0 },
-                }
-            }
-        };
+        let state = { currentView:'mainMenu', currentQuiz:[], currentIndex:0, userResponses:[], currentStreak:0, stats:{ totalQuestions:0, correctAnswers:0, xp:0, achievements:[], dailyChallengeDate:null, performance:{ domain1:{c:0,t:0}, domain2:{c:0,t:0}, domain3:{c:0,t:0}, domain4:{c:0,t:0}, domain5:{c:0,t:0} } } };
+        const CISA_DOMAINS = { domain1:{n:"Auditing Process"}, domain2:{n:"Governance & IT Mgmt"}, domain3:{n:"IS Acquisition & Dev"}, domain4:{n:"IS Ops & Resilience"}, domain5:{n:"Info Asset Protection"} };
 
-        const CISA_DOMAINS = {
-            domain1: { name: "The Process of Auditing Information Systems", weight: 0.21 },
-            domain2: { name: "Governance and Management of IT", weight: 0.17 },
-            domain3: { name: "Information Systems Acquisition, Development, and Implementation", weight: 0.12 },
-            domain4: { name: "Information Systems Operations and Business Resilience", weight: 0.23 },
-            domain5: { name: "Protection of Information Assets", weight: 0.27 }
-        };
+        // --- DOM ELEMENTS & HELPERS ---
+        const $ = (s) => document.querySelector(s);
+        const $$ = (s) => document.querySelectorAll(s);
+        const today = () => new Date().toISOString().split('T')[0];
 
-        // --- DOM ELEMENTS ---
-        const mainMenu = document.getElementById('mainMenu');
-        const quizPanel = document.getElementById('quizPanel');
-        const resultsPanel = document.getElementById('resultsPanel');
-        const loader = document.getElementById('loader');
-        const quizContent = document.getElementById('quizContent');
-        const startQuizBtn = document.getElementById('startQuizBtn');
-        const exitQuizBtn = document.getElementById('exitQuizBtn');
-        const nextBtn = document.getElementById('nextBtn');
-        const restartBtn = document.getElementById('restartBtn');
-        const resetStatsBtn = document.getElementById('resetStatsBtn');
+        // --- UI & THEME ---
+        function renderView(view) { state.currentView = view; $$('[id$="Panel"], #mainMenu').forEach(el => el.classList.add('hidden')); $(`#${view}`).classList.remove('hidden'); if (view === 'serviceRecordPanel') updateServiceRecordUI(); if (view === 'mainMenu') updateDailyChallengeBtn(); }
+        function showLoader(show) { $('#loader').classList.toggle('hidden', !show); $('#quizContent').classList.toggle('hidden', show); }
+        const applyTheme = (theme) => { document.documentElement.classList.toggle('dark', theme === 'dark'); $('#theme-icon-light').classList.toggle('hidden', theme === 'dark'); $('#theme-icon-dark').classList.toggle('hidden', theme !== 'dark'); localStorage.setItem('theme', theme); };
+        $('#themeToggle').addEventListener('click', () => applyTheme(document.documentElement.classList.contains('dark') ? 'light' : 'dark'));
 
-        // --- UI RENDERING ---
-        function renderView() {
-            mainMenu.classList.add('hidden');
-            quizPanel.classList.add('hidden');
-            resultsPanel.classList.add('hidden');
-            document.getElementById(state.currentView).classList.remove('hidden');
-        }
-
-        function showLoader(show) {
-            loader.classList.toggle('hidden', !show);
-            quizContent.classList.toggle('hidden', show);
-        }
-        
         // --- API INTERACTION ---
-        async function generateQuestions(prompt) {
-            if (!API_KEY) {
-               console.warn("API Key is missing. Falling back to mock data.");
-               return generateMockQuestions();
-            }
-
-            const payload = {
-                contents: [{ parts: [{ text: prompt }] }],
-                generationConfig: {
-                    responseMimeType: "application/json",
-                    responseSchema: {
-                        type: "OBJECT",
-                        properties: {
-                            "questions": {
-                                type: "ARRAY",
-                                items: {
-                                    type: "OBJECT",
-                                    properties: {
-                                        "question": { type: "STRING" },
-                                        "options": { type: "ARRAY", items: { type: "STRING" } },
-                                        "answer": { type: "NUMBER" },
-                                        "explanation": { type: "STRING" },
-                                        "domain": { type: "STRING" }
-                                    },
-                                    required: ["question", "options", "answer", "explanation", "domain"]
-                                }
-                            }
-                        },
-                        required: ["questions"]
-                    }
-                }
-            };
-
+        async function callGemini(prompt, isJson = true) {
+            if (!API_KEY) { console.warn("API Key is missing."); return isJson ? { questions: generateMockQuestions() } : { text: "API Key is missing. Please add it to use AI features." }; }
+            const payload = { contents: [{ parts: [{ text: prompt }] }] };
+            if (isJson) { payload.generationConfig = { responseMimeType: "application/json", responseSchema: { type: "OBJECT", properties: { "questions": { type: "ARRAY", items: { type: "OBJECT", properties: { "question":{type:"STRING"}, "options":{type:"ARRAY",items:{type:"STRING"}}, "answer":{type:"NUMBER"}, "explanation":{type:"STRING"}, "domain":{type:"STRING"} }, required:["question","options","answer","explanation","domain"] } } }, required:["questions"] } } };
             try {
-                const response = await fetch(API_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-
-                if (!response.ok) {
-                    throw new Error(`API request failed with status ${response.status}`);
-                }
-
+                const response = await fetch(API_URL, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
+                if (!response.ok) throw new Error(`API Error: ${response.status}`);
                 const result = await response.json();
-                const jsonText = result.candidates[0].content.parts[0].text;
-                const parsedJson = JSON.parse(jsonText);
-                return parsedJson.questions;
-
-            } catch (error) {
-                console.error("Error calling Gemini API:", error);
-                alert("There was an error generating questions from the AI. Please check your API key and network connection. Using fallback questions for now.");
-                return generateMockQuestions();
-            }
+                const part = result.candidates[0].content.parts[0];
+                return isJson ? JSON.parse(part.text) : { text: part.text };
+            } catch (error) { console.error("Gemini API call failed:", error); return isJson ? { questions: generateMockQuestions() } : { text: "Sorry, an error occurred with the AI request." }; }
         }
-        
-        function generateMockQuestions() {
-             const mockResponses = {
-                "mixed-10": [
-                    { "question": "What is the primary purpose of an IS audit charter?", "options": ["Document procedures for an engagement.", "Outline audit cost and timeline.", "Grant authority, scope, and responsibilities.", "List report distribution stakeholders."], "answer": 2, "explanation": "The charter formally establishes mandate, authority, independence, and scope for the audit function.", "domain": "domain1" },
-                    { "question": "A primary goal of IT governance is to:", "options": ["Have the latest technology.", "Align IT with business strategy.", "Minimize all IT spend.", "Run the help desk."], "answer": 1, "explanation": "IT governance ensures IT enables and supports business objectives.", "domain": "domain2" },
-                    { "question": "During which SDLC phase are user requirements formally defined?", "options": ["Design", "Development", "Testing", "Requirements Gathering"], "answer": 3, "explanation": "Analysis/requirements phase captures, validates, and documents stakeholder needs.", "domain": "domain3" },
-                    { "question": "A business impact analysis (BIA) is performed to:", "options": ["Calculate disaster costs", "Identify critical processes & RTOs", "Pick an alternate site vendor", "Test the DRP"], "answer": 1, "explanation": "BIA identifies critical processes, dependencies, and recovery objectives.", "domain": "domain4" },
-                    { "question": "Which provides the STRONGEST authentication?", "options": ["Complex password", "Biometric scan", "Password + OTP", "Security question"], "answer": 2, "explanation": "Combining different factors (knowledge + possession) is MFA and is strongest.", "domain": "domain5" },
-                 ],
-                "domain1": [
-                    { "question": "The PRIMARY purpose of an IS audit is to:", "options": ["Find fraudulent activities.", "Provide an opinion on the adequacy of controls.", "Recommend specific vendor products.", "Discipline employees for policy violations."], "answer": 1, "explanation": "The primary role of an IS audit is to independently evaluate and provide an opinion on the effectiveness and adequacy of the organization's internal controls.", "domain": "domain1" },
-                    { "question": "When planning an audit, an IS auditor should FIRST:", "options": ["Develop the audit report.", "Select the audit team members.", "Understand the business processes and environment.", "Perform substantive testing."], "answer": 2, "explanation": "A thorough understanding of the business context, processes, and environment is the foundational first step in audit planning, as it allows the auditor to identify key risks and scope the audit appropriately.", "domain": "domain1" },
-                ]
-            };
-            const quizType = document.getElementById('quizType').value;
-            return mockResponses[quizType] || mockResponses['mixed-10'];
-        }
+        function generateMockQuestions() { return [ { "question": "What is the primary purpose of an IS audit charter? (Mock)", "options": ["Document procedures", "Outline audit cost", "Grant authority, scope, and responsibilities.", "List stakeholders."], "answer": 2, "explanation": "The charter formally establishes mandate, authority, independence, and scope for the audit function.", "domain": "domain1" }, { "question": "A primary goal of IT governance is to: (Mock)", "options": ["Have the latest tech", "Align IT with business strategy.", "Minimize IT spend", "Run the help desk."], "answer": 1, "explanation": "IT governance ensures IT enables and supports business objectives.", "domain": "domain2" } ]; }
 
         // --- QUIZ LOGIC ---
-        async function startQuiz() {
-            state.currentView = 'quizPanel';
-            renderView();
-            showLoader(true);
-
-            const quizType = document.getElementById('quizType').value;
+        async function startQuiz(isDailyChallenge = false) {
+            renderView('quizPanel'); showLoader(true);
+            const quizType = isDailyChallenge ? 'daily' : $('#quizType').value;
             const prompt = buildPromptForQuizType(quizType);
-            
-            try {
-                const questions = await generateQuestions(prompt);
-                if (!questions || questions.length === 0) {
-                    throw new Error("AI returned no questions.");
-                }
-                state.currentQuiz = questions;
-                state.currentIndex = 0;
-                state.userResponses = [];
-                showLoader(false);
-                renderQuestion();
-            } catch (error) {
-                console.error("Failed to start quiz:", error);
-                showLoader(false);
-                // The error is already alerted in generateQuestions, so we just go back to the menu.
-                state.currentView = 'mainMenu';
-                renderView();
-            }
+            const response = await callGemini(prompt, true);
+            const questions = response.questions;
+            if (!questions || questions.length === 0) { showLoader(false); renderView('mainMenu'); alert("AI failed to generate questions. Please try again."); return; }
+            if (isDailyChallenge) { state.stats.dailyChallengeDate = today(); saveStats(); }
+            state.currentQuiz = questions; state.currentIndex = 0; state.userResponses = Array(questions.length).fill(null); state.currentStreak = 0;
+            showLoader(false); renderQuestion();
         }
 
-        function buildPromptForQuizType(quizType) {
-            const basePrompt = `You are an expert CISA exam content creator. Generate a set of high-quality, scenario-based multiple-choice questions. Each question must have four options, a single correct answer index (0-3), a detailed explanation, and the relevant CISA domain key (e.g., 'domain1'). The distractors should be plausible but incorrect.`;
-
-            if (quizType.startsWith('domain')) {
-                const domainKey = quizType;
-                const domainName = CISA_DOMAINS[domainKey].name;
-                return `${basePrompt} Generate 5 questions exclusively for CISA ${domainKey}: ${domainName}.`;
-            } else if (quizType === 'weak-areas') {
-                const weakAreas = getWeakAreas();
-                if (weakAreas.length === 0) {
-                    alert("No weak areas identified yet. Starting a standard mixed quiz instead.");
-                    return `${basePrompt} Generate 5 questions from a mix of all five CISA domains.`;
-                }
-                const weakDomainNames = weakAreas.map(d => CISA_DOMAINS[d].name).join(', ');
-                return `${basePrompt} Generate 5 questions targeting the user's identified weak areas: ${weakDomainNames}. Focus on fundamental concepts within these domains.`;
-            } else { // mixed-10
-                return `${basePrompt} Generate 10 questions from a mix of all five CISA domains, weighted according to the official exam percentages.`;
-            }
+        function buildPromptForQuizType(type) {
+            const base = `You are an expert CISA exam content creator. Generate high-quality, scenario-based multiple-choice questions. Each question must have four options, a single correct answer index (0-3), a detailed explanation, and the relevant CISA domain key (e.g., 'domain1'). Distractors must be plausible but incorrect.`;
+            if (type.startsWith('domain')) { const d = type; return `${base} Generate 5 questions for CISA ${d}: ${CISA_DOMAINS[d].n}.`; }
+            if (type === 'weak-areas') { const weak = getWeakAreas(); if (weak.length === 0) { alert("No weak areas identified. Starting a standard quiz."); return `${base} Generate 10 questions from a mix of all CISA domains.`; } return `${base} Generate 10 questions targeting the user's weak areas: ${weak.map(d => CISA_DOMAINS[d].n).join(', ')}.`; }
+            if (type === 'complex-scenario') { return `You are an expert CISA exam creator specializing in integrated risk scenarios. Generate 5 complex, scenario-based questions that require applying knowledge from TWO different CISA domains. For each, specify the primary domain. The question should ask for the BEST course of action. The correct answer must address both domains. Distractors should plausibly address only one domain. ${base}`; }
+            if (type === 'daily') { return `You are an expert CISA exam creator. Generate ONE very challenging, thought-provoking, scenario-based question that tests deep application of CISA principles, potentially integrating multiple concepts. The scenario should be realistic for a senior IT professional. ${base}`; }
+            return `${base} Generate 10 questions from a mix of all five CISA domains.`;
         }
 
-        function getWeakAreas() {
-            const weak = [];
-            for (const domainKey in state.stats.performance) {
-                const perf = state.stats.performance[domainKey];
-                if (perf.total >= 3) { // Only consider a domain if at least 3 questions have been answered
-                    const accuracy = perf.correct / perf.total;
-                    if (accuracy < 0.6) { // Threshold for weakness is < 60%
-                        weak.push(domainKey);
-                    }
-                }
-            }
-            return weak;
-        }
+        function getWeakAreas() { return Object.entries(state.stats.performance).filter(([_, p]) => p.t >= 5 && (p.c / p.t) < 0.6).map(([d, _]) => d); }
 
         function renderQuestion() {
-            if (state.currentIndex >= state.currentQuiz.length) {
-                finishQuiz();
-                return;
-            }
-
-            const question = state.currentQuiz[state.currentIndex];
-            document.getElementById('questionText').textContent = question.question;
-            
-            const answersContainer = document.getElementById('answers');
-            answersContainer.innerHTML = '';
-            question.options.forEach((option, index) => {
-                const button = document.createElement('button');
-                button.textContent = `${String.fromCharCode(65 + index)}. ${option}`;
-                button.className = 'btn answer-btn';
-                button.dataset.index = index;
-                button.onclick = () => selectAnswer(index);
-                answersContainer.appendChild(button);
-            });
-
-            document.getElementById('explanationArea').classList.add('hidden');
-            document.getElementById('nextBtn').classList.add('hidden');
             updateProgress();
+            const q = state.currentQuiz[state.currentIndex];
+            $('#questionText').textContent = q.question;
+            const answersContainer = $('#answers');
+            answersContainer.innerHTML = '';
+            q.options.forEach((opt, i) => {
+                const btn = document.createElement('button');
+                btn.innerHTML = `<strong>${String.fromCharCode(65 + i)}</strong>. ${opt}`;
+                btn.className = 'btn answer-btn';
+                btn.dataset.index = i;
+                btn.onclick = () => selectAnswer(i);
+                answersContainer.appendChild(btn);
+            });
+            const response = state.userResponses[state.currentIndex];
+            $('#aiAssistBtn').disabled = response === null;
+            if (response !== null) {
+                showExplanation();
+                $$('.answer-btn').forEach(btn => {
+                    btn.disabled = true;
+                    const btnIndex = parseInt(btn.dataset.index);
+                    if (btnIndex === q.answer) btn.classList.add('correct');
+                    else if (btnIndex === response.selectedIndex) btn.classList.add('incorrect');
+                });
+            } else {
+                $('#explanationArea').classList.add('hidden');
+            }
         }
 
         function selectAnswer(selectedIndex) {
-            const question = state.currentQuiz[state.currentIndex];
-            const isCorrect = selectedIndex === question.answer;
-
-            state.stats.totalQuestions++;
-            const domainStats = state.stats.performance[question.domain];
-            if(domainStats){
-                domainStats.total++;
-                if (isCorrect) {
-                    state.stats.correctAnswers++;
-                    domainStats.correct++;
-                }
+            const q = state.currentQuiz[state.currentIndex];
+            const isCorrect = selectedIndex === q.answer;
+            if (state.userResponses[state.currentIndex] === null) {
+                if (isCorrect) { state.stats.xp += 10; state.currentStreak++; } else { state.currentStreak = 0; }
+                state.stats.totalQuestions++;
+                const domainStats = state.stats.performance[q.domain];
+                if (domainStats) { domainStats.t++; if (isCorrect) domainStats.c++; }
             }
+            state.userResponses[state.currentIndex] = { question: q, selectedIndex, isCorrect };
             saveStats();
-
-            state.userResponses.push({ question, selectedIndex, isCorrect });
-
-            const answerButtons = document.querySelectorAll('.answer-btn');
-            answerButtons.forEach(btn => {
-                btn.disabled = true;
-                const btnIndex = parseInt(btn.dataset.index);
-                if (btnIndex === question.answer) {
-                    btn.classList.add('correct');
-                } else if (btnIndex === selectedIndex) {
-                    btn.classList.add('incorrect');
-                }
-            });
-
-            document.getElementById('explanationText').textContent = question.explanation;
-            document.getElementById('explanationArea').classList.remove('hidden');
-            document.getElementById('nextBtn').classList.remove('hidden');
-        }
-
-        function nextQuestion() {
-            state.currentIndex++;
             renderQuestion();
         }
-
+        
+        function showExplanation() { $('#explanationArea').classList.remove('hidden'); $('#explanationText').textContent = state.currentQuiz[state.currentIndex].explanation; }
+        function navigate(direction) { const newIndex = state.currentIndex + direction; if (newIndex >= 0 && newIndex < state.currentQuiz.length) { state.currentIndex = newIndex; renderQuestion(); } else if (newIndex >= state.currentQuiz.length) { finishQuiz(); } }
         function updateProgress() {
             const progress = ((state.currentIndex + 1) / state.currentQuiz.length) * 100;
-            document.getElementById('progressBar').style.width = `${progress}%`;
-            document.getElementById('progressText').textContent = `Question ${state.currentIndex + 1} of ${state.currentQuiz.length}`;
+            $('#progressBar').style.width = `${progress}%`;
+            $('#progressText').textContent = `Question ${state.currentIndex + 1} of ${state.currentQuiz.length}`;
+            $('#prevBtn').disabled = state.currentIndex === 0;
+            $('#nextBtn').textContent = state.currentIndex === state.currentQuiz.length - 1 ? 'Finish Mission 🏁' : 'Next ⏩';
+            $('#streakCounter').textContent = `🔥 ${state.currentStreak}`;
+            $('#streakCounter').classList.toggle('hidden', state.currentStreak === 0);
         }
-
-        function finishQuiz() {
-            state.currentView = 'resultsPanel';
-            renderView();
-            renderResults();
-        }
+        function finishQuiz() { checkAchievements(); renderView('resultsPanel'); renderResults(); }
         
-        function exitQuiz() {
-            if (confirm("Are you sure you want to exit? Your progress in this quiz will be lost.")) {
-                state.currentView = 'mainMenu';
-                renderView();
-            }
-        }
-
-        // --- RESULTS LOGIC ---
+        // --- RESULTS, REVIEW & GAMIFICATION ---
         function renderResults() {
-            const correctCount = state.userResponses.filter(r => r.isCorrect).length;
+            const correctCount = state.userResponses.filter(r => r && r.isCorrect).length;
             const totalCount = state.currentQuiz.length;
             const score = totalCount > 0 ? Math.round((correctCount / totalCount) * 100) : 0;
-
-            document.getElementById('finalScore').textContent = `You scored ${correctCount} out of ${totalCount} (${score}%)`;
-
-            const performanceContainer = document.getElementById('domainPerformance');
-            performanceContainer.innerHTML = '';
-            for (const domainKey in CISA_DOMAINS) {
-                const perf = state.stats.performance[domainKey];
-                if (perf.total > 0) {
-                    const accuracy = Math.round((perf.correct / perf.total) * 100);
-                    const div = document.createElement('div');
-                    div.innerHTML = `
-                        <p class="font-medium">${CISA_DOMAINS[domainKey].name}</p>
-                        <div class="flex items-center">
-                            <div class="w-full bg-gray-200 rounded-full h-2.5 mr-4">
-                                <div class="bg-blue-600 h-2.5 rounded-full" style="width: ${accuracy}%"></div>
-                            </div>
-                            <span class="text-sm font-medium">${accuracy}%</span>
-                        </div>
-                    `;
-                    performanceContainer.appendChild(div);
-                }
-            }
+            const xpGained = correctCount * 10;
+            $('#finalScore').textContent = `Score: ${correctCount} / ${totalCount} (${score}%)`;
+            $('#xpGained').textContent = `+${xpGained} XP Gained!`;
+            const perfContainer = $('#domainPerformance'); perfContainer.innerHTML = '';
+            Object.entries(state.stats.performance).forEach(([d, p]) => { if (p.t > 0) { const acc = Math.round((p.c / p.t) * 100); perfContainer.innerHTML += `<p class="font-medium">${CISA_DOMAINS[d].n}: ${acc}% (${p.c}/${p.t})</p><div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5"><div class="bg-blue-600 h-2.5 rounded-full" style="width: ${acc}%"></div></div>`; } });
+        }
+        function showReview() {
+            renderView('reviewPanel');
+            const container = $('#reviewQuestionsContainer'); container.innerHTML = '';
+            state.userResponses.forEach((resp, index) => {
+                if (!resp) return; const q = resp.question, isCorrect = resp.isCorrect, userAns = String.fromCharCode(65 + resp.selectedIndex), correctAns = String.fromCharCode(65 + q.answer);
+                container.innerHTML += `<div class="card border-l-4 ${isCorrect ? 'border-green-500' : 'border-red-500'}"><p class="font-semibold">${index + 1}. ${q.question}</p><div class="mt-2 space-y-1 text-sm text-secondary">${q.options.map((opt, i) => `<p class="${i === q.answer ? 'text-green-500 font-bold' : ''} ${i === resp.selectedIndex && !isCorrect ? 'text-red-500' : ''}">${String.fromCharCode(65 + i)}. ${opt}</p>`).join('')}</div><p class="mt-2 text-sm">You answered: ${userAns}. Correct answer: ${correctAns}.</p><details class="mt-2 text-sm"><summary class="cursor-pointer">Explanation</summary><p class="mt-1 p-2 bg-gray-100 dark:bg-gray-800 rounded">${q.explanation}</p></details></div>`;
+            });
+        }
+        function updateServiceRecordUI() {
+            const rank = [...RANKS].reverse().find(r => state.stats.xp >= r.xp) || RANKS[0];
+            const nextRank = RANKS.find(r => r.xp > rank.xp);
+            $('#rankBadge').textContent = rank.badge; $('#rankName').textContent = rank.name;
+            if (nextRank) { const prog = state.stats.xp - rank.xp, goal = nextRank.xp - rank.xp, pct = Math.round((prog / goal) * 100); $('#xpBar').style.width = `${pct}%`; $('#xpBar').textContent = `${pct}%`; $('#xpText').textContent = `${state.stats.xp} / ${nextRank.xp} XP`; }
+            else { $('#xpBar').style.width = '100%'; $('#xpBar').textContent = 'Max Rank'; $('#xpText').textContent = `${state.stats.xp} XP`; }
+            const achGrid = $('#achGrid'); achGrid.innerHTML = '';
+            for (const id in ACHIEVEMENTS) { const a = ACHIEVEMENTS[id]; const unlocked = state.stats.achievements.includes(id); achGrid.innerHTML += `<div class="ach ${unlocked ? 'unlocked' : ''} p-2 text-center rounded border border-gray-300 dark:border-gray-600"><strong>${a.name}</strong><div class="text-xs text-secondary">${a.desc}</div></div>`; }
+        }
+        function checkAchievements() {
+            const newlyUnlocked = [];
+            const correctCount = state.userResponses.filter(r => r && r.isCorrect).length;
+            if (!state.stats.achievements.includes('first_mission')) newlyUnlocked.push('first_mission');
+            if (state.stats.correctAnswers >= 10 && !state.stats.achievements.includes('quick_learner')) newlyUnlocked.push('quick_learner');
+            if (state.stats.totalQuestions >= 100 && !state.stats.achievements.includes('persistent_analyst')) newlyUnlocked.push('persistent_analyst');
+            if (correctCount === state.currentQuiz.length && state.currentQuiz.length >= 10 && !state.stats.achievements.includes('perfectionist')) newlyUnlocked.push('perfectionist');
+            if (newlyUnlocked.length > 0) { state.stats.achievements.push(...newlyUnlocked); saveStats(); newlyUnlocked.forEach(id => alert(`🏆 Achievement Unlocked: ${ACHIEVEMENTS[id].name}!`)); }
+        }
+        function updateDailyChallengeBtn() { const btn = $('#dailyChallengeBtn'); btn.disabled = state.stats.dailyChallengeDate === today(); btn.textContent = btn.disabled ? 'Daily Challenge Completed' : '🔥 Daily Challenge'; }
+        
+        // --- AI ASSIST ---
+        async function handleAiAssist() {
+            const qData = state.currentQuiz[state.currentIndex], uResp = state.userResponses[state.currentIndex];
+            $('#aiAssistModal').classList.remove('hidden'); $('#aiAssistLoader').classList.remove('hidden'); $('#aiAssistResponse').classList.add('hidden');
+            const prompt = `As a CISA tutor using the Socratic method, the user answered this question incorrectly: "${qData.question}". They chose "${qData.options[uResp.selectedIndex]}", but the correct answer was "${qData.options[qData.answer]}". The explanation was: "${qData.explanation}". **Do not give the answer directly.** Start by asking a clarifying question to help them understand the core concept they missed. Guide them to the 'aha!' moment.`;
+            const response = await callGemini(prompt, false);
+            $('#aiAssistResponse').innerHTML = response.text.replace(/\n/g, '<br>');
+            $('#aiAssistLoader').classList.add('hidden'); $('#aiAssistResponse').classList.remove('hidden');
         }
 
         // --- LOCAL STORAGE & STATS ---
-        function saveStats() {
-            localStorage.setItem('cisaAppStatsV2', JSON.stringify(state.stats));
-        }
-
-        function loadStats() {
-            const savedStats = localStorage.getItem('cisaAppStatsV2');
-            if (savedStats) {
-                state.stats = JSON.parse(savedStats);
-            }
-        }
-
-        function resetStats() {
-            if (confirm("Are you sure you want to reset all your statistics? This action cannot be undone.")) {
-                state.stats = {
-                    totalQuestions: 0,
-                    correctAnswers: 0,
-                    performance: {
-                        domain1: { correct: 0, total: 0 },
-                        domain2: { correct: 0, total: 0 },
-                        domain3: { correct: 0, total: 0 },
-                        domain4: { correct: 0, total: 0 },
-                        domain5: { correct: 0, total: 0 },
-                    }
-                };
-                saveStats();
-                alert("Your statistics have been reset.");
-            }
-        }
+        function saveStats() { localStorage.setItem('cisaAppStatsV5', JSON.stringify(state.stats)); }
+        function loadStats() { const saved = localStorage.getItem('cisaAppStatsV5'); if (saved) { const loadedStats = JSON.parse(saved); state.stats = {...state.stats, ...loadedStats, achievements: loadedStats.achievements || []}; } }
+        function resetStats() { if (confirm("Reset all lifetime stats, rank, and XP? This cannot be undone.")) { state.stats = { totalQuestions:0, correctAnswers:0, xp:0, achievements:[], dailyChallengeDate:null, performance:{domain1:{c:0,t:0},domain2:{c:0,t:0},domain3:{c:0,t:0},domain4:{c:0,t:0},domain5:{c:0,t:0}} }; saveStats(); alert("Stats reset."); updateServiceRecordUI(); } }
+        async function checkApiKey() { const statusEl = $('#apiKeyStatus'); statusEl.textContent = 'Status: CHECKING...'; if (!API_KEY) { statusEl.textContent = 'Status: ❌ MISSING'; return; } const res = await callGemini("test", false); statusEl.textContent = res && !res.text.includes("error") ? 'Status: ✅ VALID' : 'Status: ❌ INVALID'; }
 
         // --- INITIALIZATION ---
         document.addEventListener('DOMContentLoaded', () => {
             loadStats();
-            renderView();
-
-            startQuizBtn.addEventListener('click', startQuiz);
-            exitQuizBtn.addEventListener('click', exitQuiz);
-            nextBtn.addEventListener('click', nextQuestion);
-            restartBtn.addEventListener('click', () => {
-                state.currentView = 'mainMenu';
-                renderView();
-            });
-            resetStatsBtn.addEventListener('click', resetStats);
+            applyTheme(localStorage.getItem('theme') || 'light');
+            renderView('mainMenu');
+            $('#startQuizBtn').addEventListener('click', () => startQuiz(false));
+            $('#dailyChallengeBtn').addEventListener('click', () => startQuiz(true));
+            $('#exitQuizBtn').addEventListener('click', () => $('#exitModal').classList.remove('hidden'));
+            $('#confirmExitBtn').addEventListener('click', () => { $('#exitModal').classList.add('hidden'); renderView('mainMenu'); });
+            $('#cancelExitBtn').addEventListener('click', () => $('#exitModal').classList.add('hidden'));
+            $('#nextBtn').addEventListener('click', () => navigate(1));
+            $('#prevBtn').addEventListener('click', () => navigate(-1));
+            $('#restartBtn').addEventListener('click', () => renderView('mainMenu'));
+            $('#serviceRecordBtn').addEventListener('click', () => renderView('serviceRecordPanel'));
+            $('#systemBtn').addEventListener('click', () => renderView('systemPanel'));
+            $$('.backToMenuBtn').forEach(btn => btn.addEventListener('click', () => renderView('mainMenu')));
+            $('#aiAssistBtn').addEventListener('click', handleAiAssist);
+            $('#closeAiAssistModal').addEventListener('click', () => $('#aiAssistModal').classList.add('hidden'));
+            $('#resetStatsBtn').addEventListener('click', resetStats);
+            $('#checkApiKeyBtn').addEventListener('click', checkApiKey);
+            $('#reviewMissionBtn').addEventListener('click', showReview);
+            $('#backToResultsBtn').addEventListener('click', () => renderView('resultsPanel'));
         });
     </script>
-
 </body>
 </html>
