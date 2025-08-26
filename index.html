@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CISA Command Center v5</title>
+    <title>CISA Command Center v6</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Orbitron:wght@600;800&display=swap" rel="stylesheet">
     <style>
@@ -84,8 +84,6 @@
 
     <script>
         // --- CONFIGURATION ---
-        const API_KEY = "%%GEMINI_API_KEY%%"; // This is a placeholder that will be replaced by Netlify.
-        const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${API_KEY}`;
         const RANKS = [{name:'Cadet',xp:0,badge:'🎖️'},{name:'Ensign',xp:100,badge:'⭐'},{name:'Lieutenant',xp:300,badge:'⭐⭐'},{name:'Commander',xp:700,badge:'🚀'},{name:'Captain',xp:1500,badge:'🌟'},{name:'Admiral',xp:3000,badge:'🏆'}];
         const ACHIEVEMENTS = { first_mission:{name:'First Mission',desc:'Complete a quiz.'}, quick_learner:{name:'Quick Learner',desc:'Get 10 correct answers.'}, persistent_analyst:{name:'Persistent Analyst',desc:'Answer 100 total questions.'}, perfectionist:{name:'Perfectionist',desc:'Score 100% on a quiz of 10+ Qs.'} };
 
@@ -104,18 +102,31 @@
         const applyTheme = (theme) => { document.documentElement.classList.toggle('dark', theme === 'dark'); $('#theme-icon-light').classList.toggle('hidden', theme === 'dark'); $('#theme-icon-dark').classList.toggle('hidden', theme !== 'dark'); localStorage.setItem('theme', theme); };
         $('#themeToggle').addEventListener('click', () => applyTheme(document.documentElement.classList.contains('dark') ? 'light' : 'dark'));
 
-        // --- API INTERACTION ---
+        // --- API INTERACTION (via Netlify Function) ---
         async function callGemini(prompt, isJson = true) {
-            if (API_KEY === "%%GEMINI_API_KEY%%") { console.warn("API Key is missing."); return isJson ? { questions: generateMockQuestions() } : { text: "API Key is missing. Please add it to use AI features." }; }
-            const payload = { contents: [{ parts: [{ text: prompt }] }] };
-            if (isJson) { payload.generationConfig = { responseMimeType: "application/json", responseSchema: { type: "OBJECT", properties: { "questions": { type: "ARRAY", items: { type: "OBJECT", properties: { "question":{type:"STRING"}, "options":{type:"ARRAY",items:{type:"STRING"}}, "answer":{type:"NUMBER"}, "explanation":{type:"STRING"}, "domain":{type:"STRING"} }, required:["question","options","answer","explanation","domain"] } } }, required:["questions"] } } };
             try {
-                const response = await fetch(API_URL, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
-                if (!response.ok) throw new Error(`API Error: ${response.status}`);
-                const result = await response.json();
-                const part = result.candidates[0].content.parts[0];
-                return isJson ? JSON.parse(part.text) : { text: part.text };
-            } catch (error) { console.error("Gemini API call failed:", error); return isJson ? { questions: generateMockQuestions() } : { text: "Sorry, an error occurred with the AI request." }; }
+                const response = await fetch('/.netlify/functions/gemini', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt, isJson })
+                });
+
+                if (!response.ok) {
+                    const errorBody = await response.text();
+                    throw new Error(`Netlify Function Error: ${response.status} ${errorBody}`);
+                }
+                
+                return await response.json();
+
+            } catch (error) {
+                console.error("callGemini failed:", error);
+                // Fallback to mock data if the function fails
+                if (isJson) {
+                    alert("There was an error connecting to the AI. Using fallback questions.");
+                    return { questions: generateMockQuestions() };
+                }
+                return { text: "Sorry, an error occurred with the AI request." };
+            }
         }
         function generateMockQuestions() { return [ { "question": "What is the primary purpose of an IS audit charter? (Mock)", "options": ["Document procedures", "Outline audit cost", "Grant authority, scope, and responsibilities.", "List stakeholders."], "answer": 2, "explanation": "The charter formally establishes mandate, authority, independence, and scope for the audit function.", "domain": "domain1" }, { "question": "A primary goal of IT governance is to: (Mock)", "options": ["Have the latest tech", "Align IT with business strategy.", "Minimize IT spend", "Run the help desk."], "answer": 1, "explanation": "IT governance ensures IT enables and supports business objectives.", "domain": "domain2" } ]; }
 
@@ -269,10 +280,10 @@
         }
 
         // --- LOCAL STORAGE & STATS ---
-        function saveStats() { localStorage.setItem('cisaAppStatsV5', JSON.stringify(state.stats)); }
-        function loadStats() { const saved = localStorage.getItem('cisaAppStatsV5'); if (saved) { const loadedStats = JSON.parse(saved); state.stats = {...state.stats, ...loadedStats, achievements: loadedStats.achievements || [], dailyFocus: loadedStats.dailyFocus || {date: null, count: 0}}; } }
+        function saveStats() { localStorage.setItem('cisaAppStatsV6', JSON.stringify(state.stats)); }
+        function loadStats() { const saved = localStorage.getItem('cisaAppStatsV6'); if (saved) { const loadedStats = JSON.parse(saved); state.stats = {...state.stats, ...loadedStats, achievements: loadedStats.achievements || [], dailyFocus: loadedStats.dailyFocus || {date: null, count: 0}}; } }
         function resetStats() { if (confirm("Reset all lifetime stats, rank, and XP? This cannot be undone.")) { state.stats = { totalQuestions:0, correctAnswers:0, xp:0, achievements:[], dailyFocus:{date:null, count:0}, performance:{domain1:{c:0,t:0},domain2:{c:0,t:0},domain3:{c:0,t:0},domain4:{c:0,t:0},domain5:{c:0,t:0}} }; saveStats(); alert("Stats reset."); updateServiceRecordUI(); } }
-        async function checkApiKey() { const statusEl = $('#apiKeyStatus'); statusEl.textContent = 'Status: CHECKING...'; if (API_KEY === "%%GEMINI_API_KEY%%") { statusEl.textContent = 'Status: ❌ MISSING'; return; } const res = await callGemini("test", false); statusEl.textContent = res && !res.text.includes("error") ? 'Status: ✅ VALID' : 'Status: ❌ INVALID'; }
+        async function checkApiKey() { const statusEl = $('#apiKeyStatus'); statusEl.textContent = 'Status: CHECKING...'; const res = await callGemini("test", false); statusEl.textContent = res && res.text && !res.text.includes("missing") ? 'Status: ✅ VALID' : 'Status: ❌ INVALID/MISSING'; }
 
         // --- INITIALIZATION ---
         document.addEventListener('DOMContentLoaded', () => {
