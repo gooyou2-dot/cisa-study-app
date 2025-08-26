@@ -84,7 +84,7 @@
 
     <script>
         // --- CONFIGURATION ---
-        const API_KEY = "AIzaSyBd6Jcrmk92z6of7Zj1y65Ozn1lnIgv65Q"; // PASTE YOUR GOOGLE API KEY HERE
+        const API_KEY = "%%GEMINI_API_KEY%%"; // This is a placeholder that will be replaced by Netlify.
         const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${API_KEY}`;
         const RANKS = [{name:'Cadet',xp:0,badge:'🎖️'},{name:'Ensign',xp:100,badge:'⭐'},{name:'Lieutenant',xp:300,badge:'⭐⭐'},{name:'Commander',xp:700,badge:'🚀'},{name:'Captain',xp:1500,badge:'🌟'},{name:'Admiral',xp:3000,badge:'🏆'}];
         const ACHIEVEMENTS = { first_mission:{name:'First Mission',desc:'Complete a quiz.'}, quick_learner:{name:'Quick Learner',desc:'Get 10 correct answers.'}, persistent_analyst:{name:'Persistent Analyst',desc:'Answer 100 total questions.'}, perfectionist:{name:'Perfectionist',desc:'Score 100% on a quiz of 10+ Qs.'} };
@@ -106,7 +106,7 @@
 
         // --- API INTERACTION ---
         async function callGemini(prompt, isJson = true) {
-            if (!API_KEY) { console.warn("API Key is missing."); return isJson ? { questions: generateMockQuestions() } : { text: "API Key is missing. Please add it to use AI features." }; }
+            if (API_KEY === "%%GEMINI_API_KEY%%") { console.warn("API Key is missing."); return isJson ? { questions: generateMockQuestions() } : { text: "API Key is missing. Please add it to use AI features." }; }
             const payload = { contents: [{ parts: [{ text: prompt }] }] };
             if (isJson) { payload.generationConfig = { responseMimeType: "application/json", responseSchema: { type: "OBJECT", properties: { "questions": { type: "ARRAY", items: { type: "OBJECT", properties: { "question":{type:"STRING"}, "options":{type:"ARRAY",items:{type:"STRING"}}, "answer":{type:"NUMBER"}, "explanation":{type:"STRING"}, "domain":{type:"STRING"} }, required:["question","options","answer","explanation","domain"] } } }, required:["questions"] } } };
             try {
@@ -245,14 +245,15 @@
             const prompt = `As a CISA tutor using the Socratic method, the user answered this question incorrectly: "${qData.question}". They chose "${qData.options[uResp.selectedIndex]}", but the correct answer was "${qData.options[qData.answer]}". The explanation was: "${qData.explanation}". **Do not give the answer directly.** Start by asking a clarifying question to help them understand the core concept they missed. Guide them to the 'aha!' moment.`;
             const response = await callGemini(prompt, false);
             $('#aiAssistResponse').innerHTML = response.text.replace(/\n/g, '<br>');
-            $('#aiAssistLoader').classList.add('hidden'); $('#aiAssistResponse').classList.remove('hidden');
+            $('#aiAssistLoader').classList.add('hidden');
+            $('#aiAssistResponse').classList.remove('hidden');
         }
 
         // --- LOCAL STORAGE & STATS ---
         function saveStats() { localStorage.setItem('cisaAppStatsV5', JSON.stringify(state.stats)); }
         function loadStats() { const saved = localStorage.getItem('cisaAppStatsV5'); if (saved) { const loadedStats = JSON.parse(saved); state.stats = {...state.stats, ...loadedStats, achievements: loadedStats.achievements || []}; } }
         function resetStats() { if (confirm("Reset all lifetime stats, rank, and XP? This cannot be undone.")) { state.stats = { totalQuestions:0, correctAnswers:0, xp:0, achievements:[], dailyChallengeDate:null, performance:{domain1:{c:0,t:0},domain2:{c:0,t:0},domain3:{c:0,t:0},domain4:{c:0,t:0},domain5:{c:0,t:0}} }; saveStats(); alert("Stats reset."); updateServiceRecordUI(); } }
-        async function checkApiKey() { const statusEl = $('#apiKeyStatus'); statusEl.textContent = 'Status: CHECKING...'; if (!API_KEY) { statusEl.textContent = 'Status: ❌ MISSING'; return; } const res = await callGemini("test", false); statusEl.textContent = res && !res.text.includes("error") ? 'Status: ✅ VALID' : 'Status: ❌ INVALID'; }
+        async function checkApiKey() { const statusEl = $('#apiKeyStatus'); statusEl.textContent = 'Status: CHECKING...'; if (API_KEY === "%%GEMINI_API_KEY%%") { statusEl.textContent = 'Status: ❌ MISSING'; return; } const res = await callGemini("test", false); statusEl.textContent = res && !res.text.includes("error") ? 'Status: ✅ VALID' : 'Status: ❌ INVALID'; }
 
         // --- INITIALIZATION ---
         document.addEventListener('DOMContentLoaded', () => {
