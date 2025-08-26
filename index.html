@@ -44,7 +44,7 @@
                 <div><label for="quizType" class="block text-sm font-medium text-secondary">Select Quiz Type:</label><select id="quizType" class="mt-1 block w-full p-2 border rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 bg-transparent border-gray-300 dark:border-gray-600"><option value="mixed-10">Standard Protocol (10 Mixed)</option><option value="domain1">Domain 1: Auditing Process (5)</option><option value="domain2">Domain 2: Governance & IT Mgmt (5)</option><option value="domain3">Domain 3: IS Acquisition & Dev (5)</option><option value="domain4">Domain 4: IS Ops & Resilience (5)</option><option value="domain5">Domain 5: Info Asset Protection (5)</option><option value="weak-areas">Target Weak Areas (10)</option><option value="complex-scenario">Complex Scenario (5 Multi-Domain)</option></select></div>
                 <div class="flex items-end"><button id="startQuizBtn" class="btn btn-primary w-full">Initialize Mission</button></div>
             </div>
-            <div class="mt-4"><button id="dailyChallengeBtn" class="btn btn-primary w-full bg-green-600 hover:bg-green-700">🔥 Daily Challenge</button></div>
+            <div class="mt-4"><button id="dailyFocusBtn" class="btn btn-primary w-full bg-green-600 hover:bg-green-700">🎯 Daily Focus</button></div>
             <div class="mt-6 flex justify-center items-center space-x-4"><button id="serviceRecordBtn" class="btn btn-secondary">// Service Record</button><button id="systemBtn" class="btn btn-secondary">// System</button></div>
         </main>
 
@@ -90,7 +90,7 @@
         const ACHIEVEMENTS = { first_mission:{name:'First Mission',desc:'Complete a quiz.'}, quick_learner:{name:'Quick Learner',desc:'Get 10 correct answers.'}, persistent_analyst:{name:'Persistent Analyst',desc:'Answer 100 total questions.'}, perfectionist:{name:'Perfectionist',desc:'Score 100% on a quiz of 10+ Qs.'} };
 
         // --- STATE MANAGEMENT ---
-        let state = { currentView:'mainMenu', currentQuiz:[], currentIndex:0, userResponses:[], currentStreak:0, stats:{ totalQuestions:0, correctAnswers:0, xp:0, achievements:[], dailyChallengeDate:null, performance:{ domain1:{c:0,t:0}, domain2:{c:0,t:0}, domain3:{c:0,t:0}, domain4:{c:0,t:0}, domain5:{c:0,t:0} } } };
+        let state = { currentView:'mainMenu', currentQuiz:[], currentIndex:0, userResponses:[], currentStreak:0, stats:{ totalQuestions:0, correctAnswers:0, xp:0, achievements:[], dailyFocus:{date:null, count:0}, performance:{ domain1:{c:0,t:0}, domain2:{c:0,t:0}, domain3:{c:0,t:0}, domain4:{c:0,t:0}, domain5:{c:0,t:0} } } };
         const CISA_DOMAINS = { domain1:{n:"Auditing Process"}, domain2:{n:"Governance & IT Mgmt"}, domain3:{n:"IS Acquisition & Dev"}, domain4:{n:"IS Ops & Resilience"}, domain5:{n:"Info Asset Protection"} };
 
         // --- DOM ELEMENTS & HELPERS ---
@@ -99,7 +99,7 @@
         const today = () => new Date().toISOString().split('T')[0];
 
         // --- UI & THEME ---
-        function renderView(view) { state.currentView = view; $$('[id$="Panel"], #mainMenu').forEach(el => el.classList.add('hidden')); $(`#${view}`).classList.remove('hidden'); if (view === 'serviceRecordPanel') updateServiceRecordUI(); if (view === 'mainMenu') updateDailyChallengeBtn(); }
+        function renderView(view) { state.currentView = view; $$('[id$="Panel"], #mainMenu').forEach(el => el.classList.add('hidden')); $(`#${view}`).classList.remove('hidden'); if (view === 'serviceRecordPanel') updateServiceRecordUI(); if (view === 'mainMenu') updateDailyFocusBtn(); }
         function showLoader(show) { $('#loader').classList.toggle('hidden', !show); $('#quizContent').classList.toggle('hidden', show); }
         const applyTheme = (theme) => { document.documentElement.classList.toggle('dark', theme === 'dark'); $('#theme-icon-light').classList.toggle('hidden', theme === 'dark'); $('#theme-icon-dark').classList.toggle('hidden', theme !== 'dark'); localStorage.setItem('theme', theme); };
         $('#themeToggle').addEventListener('click', () => applyTheme(document.documentElement.classList.contains('dark') ? 'light' : 'dark'));
@@ -120,14 +120,21 @@
         function generateMockQuestions() { return [ { "question": "What is the primary purpose of an IS audit charter? (Mock)", "options": ["Document procedures", "Outline audit cost", "Grant authority, scope, and responsibilities.", "List stakeholders."], "answer": 2, "explanation": "The charter formally establishes mandate, authority, independence, and scope for the audit function.", "domain": "domain1" }, { "question": "A primary goal of IT governance is to: (Mock)", "options": ["Have the latest tech", "Align IT with business strategy.", "Minimize IT spend", "Run the help desk."], "answer": 1, "explanation": "IT governance ensures IT enables and supports business objectives.", "domain": "domain2" } ]; }
 
         // --- QUIZ LOGIC ---
-        async function startQuiz(isDailyChallenge = false) {
+        async function startQuiz(isDailyFocus = false) {
             renderView('quizPanel'); showLoader(true);
-            const quizType = isDailyChallenge ? 'daily' : $('#quizType').value;
+            const quizType = isDailyFocus ? 'daily' : $('#quizType').value;
             const prompt = buildPromptForQuizType(quizType);
             const response = await callGemini(prompt, true);
             const questions = response.questions;
             if (!questions || questions.length === 0) { showLoader(false); renderView('mainMenu'); alert("AI failed to generate questions. Please try again."); return; }
-            if (isDailyChallenge) { state.stats.dailyChallengeDate = today(); saveStats(); }
+            if (isDailyFocus) { 
+                if (state.stats.dailyFocus.date !== today()) {
+                    state.stats.dailyFocus.date = today();
+                    state.stats.dailyFocus.count = 0;
+                }
+                state.stats.dailyFocus.count++;
+                saveStats(); 
+            }
             state.currentQuiz = questions; state.currentIndex = 0; state.userResponses = Array(questions.length).fill(null); state.currentStreak = 0;
             showLoader(false); renderQuestion();
         }
@@ -236,7 +243,19 @@
             if (correctCount === state.currentQuiz.length && state.currentQuiz.length >= 10 && !state.stats.achievements.includes('perfectionist')) newlyUnlocked.push('perfectionist');
             if (newlyUnlocked.length > 0) { state.stats.achievements.push(...newlyUnlocked); saveStats(); newlyUnlocked.forEach(id => alert(`🏆 Achievement Unlocked: ${ACHIEVEMENTS[id].name}!`)); }
         }
-        function updateDailyChallengeBtn() { const btn = $('#dailyChallengeBtn'); btn.disabled = state.stats.dailyChallengeDate === today(); btn.textContent = btn.disabled ? 'Daily Challenge Completed' : '🔥 Daily Challenge'; }
+        function updateDailyFocusBtn() {
+            const btn = $('#dailyFocusBtn');
+            if (state.stats.dailyFocus.date !== today()) {
+                state.stats.dailyFocus.count = 0;
+            }
+            const remaining = 2 - state.stats.dailyFocus.count;
+            btn.disabled = remaining <= 0;
+            if (btn.disabled) {
+                btn.textContent = 'Daily Focus Completed';
+            } else {
+                btn.textContent = `🎯 Daily Focus (${remaining} remaining)`;
+            }
+        }
         
         // --- AI ASSIST ---
         async function handleAiAssist() {
@@ -251,8 +270,8 @@
 
         // --- LOCAL STORAGE & STATS ---
         function saveStats() { localStorage.setItem('cisaAppStatsV5', JSON.stringify(state.stats)); }
-        function loadStats() { const saved = localStorage.getItem('cisaAppStatsV5'); if (saved) { const loadedStats = JSON.parse(saved); state.stats = {...state.stats, ...loadedStats, achievements: loadedStats.achievements || []}; } }
-        function resetStats() { if (confirm("Reset all lifetime stats, rank, and XP? This cannot be undone.")) { state.stats = { totalQuestions:0, correctAnswers:0, xp:0, achievements:[], dailyChallengeDate:null, performance:{domain1:{c:0,t:0},domain2:{c:0,t:0},domain3:{c:0,t:0},domain4:{c:0,t:0},domain5:{c:0,t:0}} }; saveStats(); alert("Stats reset."); updateServiceRecordUI(); } }
+        function loadStats() { const saved = localStorage.getItem('cisaAppStatsV5'); if (saved) { const loadedStats = JSON.parse(saved); state.stats = {...state.stats, ...loadedStats, achievements: loadedStats.achievements || [], dailyFocus: loadedStats.dailyFocus || {date: null, count: 0}}; } }
+        function resetStats() { if (confirm("Reset all lifetime stats, rank, and XP? This cannot be undone.")) { state.stats = { totalQuestions:0, correctAnswers:0, xp:0, achievements:[], dailyFocus:{date:null, count:0}, performance:{domain1:{c:0,t:0},domain2:{c:0,t:0},domain3:{c:0,t:0},domain4:{c:0,t:0},domain5:{c:0,t:0}} }; saveStats(); alert("Stats reset."); updateServiceRecordUI(); } }
         async function checkApiKey() { const statusEl = $('#apiKeyStatus'); statusEl.textContent = 'Status: CHECKING...'; if (API_KEY === "%%GEMINI_API_KEY%%") { statusEl.textContent = 'Status: ❌ MISSING'; return; } const res = await callGemini("test", false); statusEl.textContent = res && !res.text.includes("error") ? 'Status: ✅ VALID' : 'Status: ❌ INVALID'; }
 
         // --- INITIALIZATION ---
@@ -261,7 +280,7 @@
             applyTheme(localStorage.getItem('theme') || 'light');
             renderView('mainMenu');
             $('#startQuizBtn').addEventListener('click', () => startQuiz(false));
-            $('#dailyChallengeBtn').addEventListener('click', () => startQuiz(true));
+            $('#dailyFocusBtn').addEventListener('click', () => startQuiz(true));
             $('#exitQuizBtn').addEventListener('click', () => $('#exitModal').classList.remove('hidden'));
             $('#confirmExitBtn').addEventListener('click', () => { $('#exitModal').classList.add('hidden'); renderView('mainMenu'); });
             $('#cancelExitBtn').addEventListener('click', () => $('#exitModal').classList.add('hidden'));
